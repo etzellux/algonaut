@@ -1,235 +1,72 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MultisigSubsig {
+    #[serde(rename = "pk")]
+    pub key: Option<String>,
+    #[serde(rename = "s")]
+    pub signature: Option<String>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MultiSig {
+    #[serde(rename = "v")]
+    pub version: Option<u8>,
+    #[serde(rename = "thr")]
+    pub threshold: Option<u8>,
+    #[serde(rename = "subsig")]
+    pub subsignatures: Option<Vec<MultisigSubsig>>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LogicSig {
+    #[serde(rename = "l")]
+    pub logic: Option<String>,
+    #[serde(rename = "sig")]
+    pub signature: Option<String>,
+    #[serde(rename = "msig")]
+    pub multisig: Option<MultiSig>,
+    #[serde(rename = "arg")]
+    pub arguments: Option<HashMap<String, String>>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TransactionHeader {
     pub hgi: Option<bool>,
     pub sig: Option<String>,
-    pub msig: Option<String>,
-    pub lsig: Option<String>,
+    pub msig: Option<MultiSig>,
+    pub lsig: Option<LogicSig>,
 
     #[serde(flatten)]
     pub apply_data: Option<ApplyData>,
-    pub txn: Option<Transaction>,
+    pub txn: Transaction,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum Transaction {
     #[serde(rename = "pay")]
-    Payment {
-        #[serde(rename = "fee")]
-        fee: Option<u64>,
-        #[serde(rename = "fv")]
-        first_valid: Option<u64>,
-        #[serde(rename = "gh")]
-        genesis_hash: Option<String>,
-        #[serde(rename = "lv")]
-        last_valid: Option<u64>,
-        #[serde(rename = "snd")]
-        sender: Option<String>,
-        #[serde(rename = "gen")]
-        genesis_id: Option<String>,
-        #[serde(rename = "grp")]
-        group: Option<String>,
-        #[serde(rename = "lx")]
-        lease: Option<String>,
-        #[serde(rename = "note")]
-        note: Option<String>,
-        #[serde(rename = "rekey")]
-        rekey: Option<String>,
-        // type specific fields
-        #[serde(rename = "rcv")]
-        receiver: Option<String>,
-        #[serde(rename = "amt")]
-        amount: Option<u64>,
-        #[serde(rename = "close")]
-        close_remainder_to: Option<String>,
-    },
+    Payment(PaymentTransaction),
     #[serde(rename = "keyreg")]
-    KeyRegistration {
-        #[serde(rename = "fee")]
-        fee: Option<u64>,
-        #[serde(rename = "fv")]
-        first_valid: Option<u64>,
-        #[serde(rename = "gh")]
-        genesis_hash: Option<String>,
-        #[serde(rename = "lv")]
-        last_valid: Option<u64>,
-        #[serde(rename = "snd")]
-        sender: Option<String>,
-        #[serde(rename = "gen")]
-        genesis_id: Option<String>,
-        #[serde(rename = "grp")]
-        group: Option<String>,
-        #[serde(rename = "lx")]
-        lease: Option<String>,
-        #[serde(rename = "note")]
-        note: Option<String>,
-        #[serde(rename = "rekey")]
-        rekey: Option<String>,
-        // type specific fields
-        #[serde(rename = "votekey")]
-        vote_pk: Option<String>,
-        #[serde(rename = "selkey")]
-        selection_pk: Option<String>,
-        #[serde(rename = "sprfkey")]
-        state_proof_pk: Option<String>,
-        #[serde(rename = "votefst")]
-        vote_first: Option<u64>,
-        #[serde(rename = "votelst")]
-        vote_last: Option<u64>,
-        #[serde(rename = "votekd")]
-        vote_key_dilution: Option<u64>,
-        #[serde(rename = "nonpart")]
-        nonparticipating: Option<bool>,
-    },
+    KeyRegistration(KeyRegistrationTransaction),
     #[serde(rename = "acfg")]
-    AssetConfig {
-        #[serde(rename = "fee")]
-        fee: Option<u64>,
-        #[serde(rename = "fv")]
-        first_valid: Option<u64>,
-        #[serde(rename = "gh")]
-        genesis_hash: Option<String>,
-        #[serde(rename = "lv")]
-        last_valid: Option<u64>,
-        #[serde(rename = "snd")]
-        sender: Option<String>,
-        #[serde(rename = "gen")]
-        genesis_id: Option<String>,
-        #[serde(rename = "grp")]
-        group: Option<String>,
-        #[serde(rename = "lx")]
-        lease: Option<String>,
-        #[serde(rename = "note")]
-        note: Option<String>,
-        #[serde(rename = "rekey")]
-        rekey: Option<String>,
-        // type specific fields
-        #[serde(rename = "caid")]
-        config_asset: Option<u64>,
-        #[serde(rename = "apar")]
-        params: Option<AssetParams>,
-    },
+    AssetConfig(AssetConfigTransaction),
     #[serde(rename = "axfer")]
-    AssetTransfer {
-        #[serde(rename = "fee")]
-        fee: Option<u64>,
-        #[serde(rename = "fv")]
-        first_valid: Option<u64>,
-        #[serde(rename = "gh")]
-        genesis_hash: Option<String>,
-        #[serde(rename = "lv")]
-        last_valid: Option<u64>,
-        #[serde(rename = "snd")]
-        sender: Option<String>,
-        #[serde(rename = "gen")]
-        genesis_id: Option<String>,
-        #[serde(rename = "grp")]
-        group: Option<String>,
-        #[serde(rename = "lx")]
-        lease: Option<String>,
-        #[serde(rename = "note")]
-        note: Option<String>,
-        #[serde(rename = "rekey")]
-        rekey: Option<String>,
-        // type specific fields
-        #[serde(rename = "xaid")]
-        asset_xfer: Option<u64>,
-        #[serde(rename = "aamt")]
-        asset_amount: Option<u64>,
-        #[serde(rename = "asnd")]
-        asset_sender: Option<String>,
-        #[serde(rename = "arcv")]
-        asset_receiver: Option<String>,
-        #[serde(rename = "close")]
-        asset_close_remainder_to: Option<String>,
-    },
+    AssetTransfer(AssetTransferTransaction),
     #[serde(rename = "afrz")]
-    AssetFreeze {
-        #[serde(rename = "fee")]
-        fee: Option<u64>,
-        #[serde(rename = "fv")]
-        first_valid: Option<u64>,
-        #[serde(rename = "gh")]
-        genesis_hash: Option<String>,
-        #[serde(rename = "lv")]
-        last_valid: Option<u64>,
-        #[serde(rename = "snd")]
-        sender: Option<String>,
-        #[serde(rename = "gen")]
-        genesis_id: Option<String>,
-        #[serde(rename = "grp")]
-        group: Option<String>,
-        #[serde(rename = "lx")]
-        lease: Option<String>,
-        #[serde(rename = "note")]
-        note: Option<String>,
-        #[serde(rename = "rekey")]
-        rekey: Option<String>,
-        // type specific fields
-        #[serde(rename = "fadd")]
-        freeze_account: Option<String>,
-        #[serde(rename = "faid")]
-        asset_id: Option<u64>,
-        #[serde(rename = "ffrz")]
-        frozen: Option<bool>,
-    },
+    AssetFreeze(AssetFreezeTransaction),
     #[serde(rename = "appl")]
-    Application {
-        #[serde(rename = "fee")]
-        fee: Option<u64>,
-        #[serde(rename = "fv")]
-        first_valid: Option<u64>,
-        #[serde(rename = "gh")]
-        genesis_hash: Option<String>,
-        #[serde(rename = "lv")]
-        last_valid: Option<u64>,
-        #[serde(rename = "snd")]
-        sender: Option<String>,
-        #[serde(rename = "gen")]
-        genesis_id: Option<String>,
-        #[serde(rename = "grp")]
-        group: Option<String>,
-        #[serde(rename = "lx")]
-        lease: Option<String>,
-        #[serde(rename = "note")]
-        note: Option<String>,
-        #[serde(rename = "rekey")]
-        rekey: Option<String>,
-        // type specific fields
-        #[serde(rename = "apid")]
-        app_id: Option<u64>,
-        #[serde(rename = "apan")]
-        on_complete: Option<u64>,
-        #[serde(rename = "apat")]
-        accounts: Option<Vec<String>>,
-        #[serde(rename = "apap")]
-        approval_program: Option<String>,
-        #[serde(rename = "apaa")]
-        app_arguments: Option<Vec<String>>,
-        #[serde(rename = "apsu")]
-        clear_state_program: Option<String>,
-        #[serde(rename = "apfa")]
-        foreign_apps: Option<Vec<u64>>,
-        #[serde(rename = "apas")]
-        foreign_assets: Option<Vec<u64>>,
-        #[serde(rename = "apgs")]
-        global_state_schema: Option<StateSchema>,
-        #[serde(rename = "apls")]
-        local_state_schema: Option<StateSchema>,
-        #[serde(rename = "apep")]
-        extra_program_pages: Option<u64>,
-        #[serde(rename = "apbx")]
-        boxes: Option<Vec<BoxReference>>,
-    },
+    ApplicationCall(ApplicationCallTransaction),
+    #[serde(rename = "stpf")]
+    StateProof(StateProofTransaction)
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct AssetParams {
     #[serde(rename = "am")]
-    pub meta_data_hash: Option<Vec<u8>>,
+    pub meta_data_hash: Option<String>,
     #[serde(rename = "an")]
     pub asset_name: Option<String>,
     #[serde(rename = "au")]
@@ -252,10 +89,339 @@ pub struct AssetParams {
     pub unit_name: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PaymentTransaction {
+    #[serde(rename = "fee")]
+    pub fee: Option<u64>,
+    #[serde(rename = "fv")]
+    pub first_valid: Option<u64>,
+    #[serde(rename = "gh")]
+    pub genesis_hash: Option<String>,
+    #[serde(rename = "lv")]
+    pub last_valid: Option<u64>,
+    #[serde(rename = "snd")]
+    pub sender: Option<String>,
+    #[serde(rename = "gen")]
+    pub genesis_id: Option<String>,
+    #[serde(rename = "grp")]
+    pub group: Option<String>,
+    #[serde(rename = "lx")]
+    pub lease: Option<String>,
+    #[serde(rename = "note")]
+    pub note: Option<String>,
+    #[serde(rename = "rekey")]
+    pub rekey: Option<String>,
+    // type specific fields
+    #[serde(rename = "rcv")]
+    pub receiver: Option<String>,
+    #[serde(rename = "amt")]
+    pub amount: Option<u64>,
+    #[serde(rename = "close")]
+    pub close_remainder_to: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct KeyRegistrationTransaction {
+    #[serde(rename = "fee")]
+    pub fee: Option<u64>,
+    #[serde(rename = "fv")]
+    pub first_valid: Option<u64>,
+    #[serde(rename = "gh")]
+    pub genesis_hash: Option<String>,
+    #[serde(rename = "lv")]
+    pub last_valid: Option<u64>,
+    #[serde(rename = "snd")]
+    pub sender: Option<String>,
+    #[serde(rename = "gen")]
+    pub genesis_id: Option<String>,
+    #[serde(rename = "grp")]
+    pub group: Option<String>,
+    #[serde(rename = "lx")]
+    pub lease: Option<String>,
+    #[serde(rename = "note")]
+    pub note: Option<String>,
+    #[serde(rename = "rekey")]
+    pub rekey: Option<String>,
+    // type specific fields
+    #[serde(rename = "votekey")]
+    pub vote_pk: Option<String>,
+    #[serde(rename = "selkey")]
+    pub selection_pk: Option<String>,
+    #[serde(rename = "sprfkey")]
+    pub state_proof_pk: Option<String>,
+    #[serde(rename = "votefst")]
+    pub vote_first: Option<u64>,
+    #[serde(rename = "votelst")]
+    pub vote_last: Option<u64>,
+    #[serde(rename = "votekd")]
+    pub vote_key_dilution: Option<u64>,
+    #[serde(rename = "nonpart")]
+    pub nonparticipating: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AssetConfigTransaction {
+    #[serde(rename = "fee")]
+    pub fee: Option<u64>,
+    #[serde(rename = "fv")]
+    pub first_valid: Option<u64>,
+    #[serde(rename = "gh")]
+    pub genesis_hash: Option<String>,
+    #[serde(rename = "lv")]
+    pub last_valid: Option<u64>,
+    #[serde(rename = "snd")]
+    pub sender: Option<String>,
+    #[serde(rename = "gen")]
+    pub genesis_id: Option<String>,
+    #[serde(rename = "grp")]
+    pub group: Option<String>,
+    #[serde(rename = "lx")]
+    pub lease: Option<String>,
+    #[serde(rename = "note")]
+    pub note: Option<String>,
+    #[serde(rename = "rekey")]
+    pub rekey: Option<String>,
+    // type specific fields
+    #[serde(rename = "caid")]
+    pub config_asset: Option<u64>,
+    #[serde(rename = "apar")]
+    pub params: Option<AssetParams>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AssetTransferTransaction {
+    #[serde(rename = "fee")]
+    pub fee: Option<u64>,
+    #[serde(rename = "fv")]
+    pub first_valid: Option<u64>,
+    #[serde(rename = "gh")]
+    pub genesis_hash: Option<String>,
+    #[serde(rename = "lv")]
+    pub last_valid: Option<u64>,
+    #[serde(rename = "snd")]
+    pub sender: Option<String>,
+    #[serde(rename = "gen")]
+    pub genesis_id: Option<String>,
+    #[serde(rename = "grp")]
+    pub group: Option<String>,
+    #[serde(rename = "lx")]
+    pub lease: Option<String>,
+    #[serde(rename = "note")]
+    pub note: Option<String>,
+    #[serde(rename = "rekey")]
+    pub rekey: Option<String>,
+    // type specific fields
+    #[serde(rename = "xaid")]
+    pub asset_xfer: Option<u64>,
+    #[serde(rename = "aamt")]
+    pub asset_amount: Option<u64>,
+    #[serde(rename = "asnd")]
+    pub asset_sender: Option<String>,
+    #[serde(rename = "arcv")]
+    pub asset_receiver: Option<String>,
+    #[serde(rename = "close")]
+    pub asset_close_remainder_to: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AssetFreezeTransaction {
+    #[serde(rename = "fee")]
+    pub fee: Option<u64>,
+    #[serde(rename = "fv")]
+    pub first_valid: Option<u64>,
+    #[serde(rename = "gh")]
+    pub genesis_hash: Option<String>,
+    #[serde(rename = "lv")]
+    pub last_valid: Option<u64>,
+    #[serde(rename = "snd")]
+    pub sender: Option<String>,
+    #[serde(rename = "gen")]
+    pub genesis_id: Option<String>,
+    #[serde(rename = "grp")]
+    pub group: Option<String>,
+    #[serde(rename = "lx")]
+    pub lease: Option<String>,
+    #[serde(rename = "note")]
+    pub note: Option<String>,
+    #[serde(rename = "rekey")]
+    pub rekey: Option<String>,
+    // type specific fields
+    #[serde(rename = "fadd")]
+    pub freeze_account: Option<String>,
+    #[serde(rename = "faid")]
+    pub asset_id: Option<u64>,
+    #[serde(rename = "ffrz")]
+    pub frozen: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ApplicationCallTransaction {
+    #[serde(rename = "fee")]
+    pub fee: Option<u64>,
+    #[serde(rename = "fv")]
+    pub first_valid: Option<u64>,
+    #[serde(rename = "gh")]
+    pub genesis_hash: Option<String>,
+    #[serde(rename = "lv")]
+    pub last_valid: Option<u64>,
+    #[serde(rename = "snd")]
+    pub sender: Option<String>,
+    #[serde(rename = "gen")]
+    pub genesis_id: Option<String>,
+    #[serde(rename = "grp")]
+    pub group: Option<String>,
+    #[serde(rename = "lx")]
+    pub lease: Option<String>,
+    #[serde(rename = "note")]
+    pub note: Option<String>,
+    #[serde(rename = "rekey")]
+    pub rekey: Option<String>,
+    // type specific fields
+    #[serde(rename = "apid")]
+    pub app_id: Option<u64>,
+    #[serde(rename = "apan")]
+    pub on_complete: Option<u64>,
+    #[serde(rename = "apat")]
+    pub accounts: Option<Vec<String>>,
+    #[serde(rename = "apap")]
+    pub approval_program: Option<String>,
+    #[serde(rename = "apaa")]
+    pub app_arguments: Option<Vec<Option<String>>>,
+    #[serde(rename = "apsu")]
+    pub clear_state_program: Option<String>,
+    #[serde(rename = "apfa")]
+    pub foreign_apps: Option<Vec<u64>>,
+    #[serde(rename = "apas")]
+    pub foreign_assets: Option<Vec<u64>>,
+    #[serde(rename = "apgs")]
+    pub global_state_schema: Option<StateSchema>,
+    #[serde(rename = "apls")]
+    pub local_state_schema: Option<StateSchema>,
+    #[serde(rename = "apep")]
+    pub extra_program_pages: Option<u64>,
+    #[serde(rename = "apbx")]
+    pub boxes: Option<Vec<BoxReference>>,
+}
+
+/* STATE PROOF TRANSACTION STRUCTS */
+
+pub type Commitment = String;
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct Verifier {
+    #[serde(rename = "cmt")]
+    commitment: Option<Commitment>,
+    #[serde(rename = "lf")]
+    key_lifetime: Option<u64>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct Participant {
+    #[serde(rename = "p")]
+    pk: Option<Verifier>,
+    #[serde(rename = "w")]
+    weight: Option<u64>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct FalconVerifier {
+    #[serde(rename = "k")]
+    pub falcon_public_key: Option<String>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct Signature {
+    #[serde(rename = "s")]
+    signature: Option<String>,
+    #[serde(rename = "idx")]
+    vector_commitment_index: Option<u64>,
+    #[serde(rename = "prf")]
+    proof: Option<SingleLeafProof>,
+    #[serde(rename = "vkey")]
+    verifying_key: Option<FalconVerifier>
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct SigSlotCommit {
+    #[serde(rename = "s")]
+    pub signature: Option<Signature>,
+    pub l: Option<u64>
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct Reveal {
+    #[serde(rename = "s")]
+    sig_slot: Option<SigSlotCommit>,
+    #[serde(rename = "p")]
+    participant: Option<Participant> 
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct HashFactory {
+    #[serde(rename = "t")]
+    hash_type: Option<u16>
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct Proof {
+    #[serde(rename = "pth")]
+    path: Option<Vec<String>>,
+    #[serde(rename = "hsh")]
+    hash_factory: Option<HashFactory>,
+    #[serde(rename = "td")]
+    tree_depth: Option<u8>,
+}
+
+type SingleLeafProof = Proof;
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct StateProof {
+    #[serde(rename = "c")]
+    sig_commit: Option<String>,
+    #[serde(rename = "w")]
+    signed_weight: Option<u64>,
+    #[serde(rename = "S")]
+    sig_proofs: Option<Proof>,
+    #[serde(rename = "P")]
+    part_proofs: Option<Proof>,
+    #[serde(rename = "v")]
+    merkle_signature_salt_version: Option<u8>,
+    #[serde(rename = "r")]
+    reveals: Option<HashMap<String, Reveal>>,  // Key is expected to be u64 as string.
+    #[serde(rename = "pr")]
+    position_to_reveal: Option<Vec<u64>>
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct StateProofMessage {
+    #[serde(rename = "b")]
+    pub block_headers_commitment: Option<String>,
+    #[serde(rename = "v")]
+    pub voters_commitment: Option<String>,
+    #[serde(rename = "P")]
+    pub ln_proven_weight: Option<u64>,
+    #[serde(rename = "f")]
+    pub first_attested_round: Option<u64>,
+    #[serde(rename = "l")]
+    pub last_attested_round: Option<u64>
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct StateProofTransaction {
+    #[serde(rename = "sptype")]
+    pub state_proof_type: Option<u64>,
+    #[serde(rename = "sp")]
+    pub state_proof: Option<StateProof>,
+    #[serde(rename = "spmsg")]
+    pub message: Option<StateProofMessage>
+}
+
+/* APPLICATION CALL TRANSACTION STRUCTS */
+
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct BoxReference {
     #[serde(rename = "n")]
-    name: String
+    name: Option<String>
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
